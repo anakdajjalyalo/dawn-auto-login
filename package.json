@@ -1,19 +1,18 @@
 {
-  "name": "auto-login",
+  "name": "captcha-login-bot",
   "version": "1.0.0",
-  "description": "Auto login script",
+  "description": "A bot to automate login with captcha solving",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "fs-extra": "^11.2.0",
-    "node-fetch": "^3.3.2",
-    "readline": "^1.3.0",
-    "2captcha-ts": "^2.2.2",
-    "@antiadmin/anticaptchaofficial": "^1.0.45",
-    "base64-js": "^1.5.1",
-    "chalk": "^5.3.0"
-  }
+    "fs-extra": "^11.1.1",
+    "node-fetch": "^2.6.7",
+    "chalk": "^5.3.0",
+    "2captcha-ts": "^1.0.5",
+    "@antiadmin/anticaptchaofficial": "^1.0.10",
+    "sharp": "^0.32.4"
+  },
+  "type": "module"
 }
