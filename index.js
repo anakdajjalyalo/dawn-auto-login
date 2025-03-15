@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { createInterface } from 'readline';
 import { Solver } from '2captcha-ts';
 import ac from '@antiadmin/anticaptchaofficial';
+import sharp from 'sharp';
 
 const readline = createInterface({
   input: process.stdin,
@@ -41,6 +42,8 @@ function setupCaptchaSolver(apiKey, solverType) {
   model = solverType;
   if (solverType === '2captcha') {
     solver = new Solver(apiKey);
+  } else if (solverType === 'manual') {
+    solver = null;
   } else {
     solver = ac;
     solver.setAPIKey(apiKey);
@@ -74,6 +77,19 @@ async function getPuzzleId(appId) {
   }
 }
 
+// Save captcha image to file
+async function saveCaptchaImage(base64Image) {
+  try {
+    const imageBuffer = Buffer.from(base64Image, 'base64');
+    await sharp(imageBuffer)
+      .resize(300) // Make it easier to see
+      .toFile('temp_captcha.png');
+    console.log(chalk.green('✓ Saved captcha image to temp_captcha.png'));
+  } catch (error) {
+    throw new Error(`Failed to save captcha image: ${error.message}`);
+  }
+}
+
 // Get puzzle image for solving
 async function getPuzzleImage(puzzleId, appId) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
@@ -103,6 +119,12 @@ async function getPuzzleImage(puzzleId, appId) {
 // Process and solve captcha image
 async function processCaptcha(base64Image) {
   try {
+    if (model === 'manual') {
+      await saveCaptchaImage(base64Image);
+      const captchaText = await question(chalk.cyan('\nPlease check temp_captcha.png and enter the captcha code: '));
+      return captchaText;
+    }
+
     let captchaText;
     if (model === '2captcha') {
       const result = await solver.imageCaptcha({
@@ -238,11 +260,16 @@ async function main() {
   console.log(chalk.cyan('\nChoose your captcha solver:'));
   console.log('1. 2captcha');
   console.log('2. Anti-Captcha');
+  console.log('3. Manual Input');
   
-  const solverChoice = await question('Enter your choice (1 or 2): ');
-  const solverType = solverChoice === '1' ? '2captcha' : 'anticaptcha';
+  const solverChoice = await question('Enter your choice (1, 2, or 3): ');
+  const solverType = solverChoice === '1' ? '2captcha' : 
+                     solverChoice === '2' ? 'anticaptcha' : 'manual';
   
-  const apiKey = await question(`Enter your ${solverType} API key: `);
+  let apiKey = '';
+  if (solverType !== 'manual') {
+    apiKey = await question(`Enter your ${solverType} API key: `);
+  }
   
   setupCaptchaSolver(apiKey, solverType);
   
